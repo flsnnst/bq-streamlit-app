@@ -388,24 +388,24 @@ if raw_sql and raw_sql.strip():
         #     help="Interactive lets you click nodes to change focus; Pretty gives a polished PyVis export."
         # )
 
-        if renderer.startswith("Interactive"):
-            clicked = render_agraph_lr_band(G, focus, sources, dependents, height_px=graph_height)
-            if clicked and clicked in G.nodes:
+        # if renderer.startswith("Interactive"):
+        clicked = render_agraph_lr_band(G, focus, sources, dependents, height_px=graph_height)
+        if clicked and clicked in G.nodes:
 
-                if clicked != st.session_state["focus_node"]:
-                    st.session_state["focus_node"] = clicked
-                    st.rerun()
-        else:
-
-            html = render_pyvis_lr_band(G, focus, sources, dependents, height_px=graph_height)
-            st.components.v1.html(html, height=graph_height + 40, scrolling=True)
-            with st.expander("Download graph as standalone HTML"):
-                st.download_button(
-                    label="Download .html",
-                    data=html,
-                    file_name=f"refviewer_{focus.replace('.', '_')}.html",
-                    mime="text/html",
-                )
+            if clicked != st.session_state["focus_node"]:
+                st.session_state["focus_node"] = clicked
+                st.rerun()
+        # else:
+        #
+        #     html = render_pyvis_lr_band(G, focus, sources, dependents, height_px=graph_height)
+        #     st.components.v1.html(html, height=graph_height + 40, scrolling=True)
+        #     with st.expander("Download graph as standalone HTML"):
+        #         st.download_button(
+        #             label="Download .html",
+        #             data=html,
+        #             file_name=f"refviewer_{focus.replace('.', '_')}.html",
+        #             mime="text/html",
+        #         )
 
 else:
     with right:
