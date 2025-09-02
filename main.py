@@ -261,7 +261,7 @@ st.markdown(
 
 st.title("BigQuery Reference Viewer")
 st.caption("Visualize how your CREATE TABLE/VIEW statements read from and feed other objects.")
-s
+
 with st.sidebar:
     st.header("Options")
     default_project = "" #st.text_input("Default Project (optional)")
