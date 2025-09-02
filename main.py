@@ -1,6 +1,3 @@
-# app.py — BigQuery Reference Viewer (Left → Focus → Right)
-# Improved English UI/UX
-
 import streamlit as st
 import networkx as nx
 from pyvis.network import Network
@@ -11,21 +8,13 @@ from typing import List, Tuple, Set, Optional
 # =========================
 # -------- Helpers --------
 # =========================
-# ------------- AGraph (clickable) renderer -------------
-# ------------- AGraph (clickable, fixed LR band) -------------
 from streamlit_agraph import agraph, Node as ANode, Edge as AEdge, Config as AConfig
 
 def render_agraph_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: set, height_px: int = 760):
-    """
-    Solda kaynaklar, ortada focus, sağda bağımlılar olacak şekilde
-    x,y sabitlenmiş tıklanabilir grafik. Tıklanan düğüm kimliği döner.
-    """
-    # Yerleşim parametreleri
     X_LEFT, X_MID, X_RIGHT = -450, 0, 450
     Y_STEP = 80
 
     def grid_positions(n):
-        # Düğümleri dikeyde ortala
         if n == 0:
             return []
         start = -((n - 1) * Y_STEP) / 2
@@ -34,7 +23,6 @@ def render_agraph_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: s
     nodes = []
 
     def add_node(node_id: str, kind: str, x: int, y: int, is_focus: bool = False):
-        # Renk/şekil
         if is_focus:
             color = "#FFD59E"; shape = "box"
         else:
@@ -55,8 +43,8 @@ def render_agraph_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: s
             color=color,
             shape=shape,
             x=x, y=y,
-            fixed=True,           # x,y sabit
-            # title=node_id,      # tooltip istersen aç
+            fixed=True,         
+            # title=node_id, 
         ))
 
     # Sources (left column)
@@ -65,24 +53,21 @@ def render_agraph_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: s
         kind = G.nodes[n].get("kind", "table")
         add_node(n, kind, X_LEFT, int(y))
 
-    # Focus (middle)
     fkind = G.nodes[focus].get("kind", "table")
     add_node(focus, fkind, X_MID, 0, is_focus=True)
 
-    # Dependents (right column)
     dep_list = sorted(dependents)
     for y, n in zip(grid_positions(len(dep_list)), dep_list):
         kind = G.nodes[n].get("kind", "table")
         add_node(n, kind, X_RIGHT, int(y))
 
-    # Edges: Left→Focus and Focus→Right
+
     edges = []
     for s in src_list:
         edges.append(AEdge(source=s, target=focus, label="feeds", smooth=False, physics=False))
     for d in dep_list:
         edges.append(AEdge(source=focus, target=d, label="feeds", smooth=False, physics=False))
 
-    # Fizik kapalı, hiyerarşi kapalı (çünkü konumları biz veriyoruz)
     config = AConfig(
         width="100%",
         height=height_px,
@@ -90,8 +75,8 @@ def render_agraph_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: s
         nodeHighlightBehavior=True,
         highlightColor="#ffd59e",
         collapsible=False,
-        physics=False,          # ← önemli
-        hierarchical=False,     # ← önemli
+        physics=False,         
+        hierarchical=False,    
     )
 
     clicked = agraph(nodes=nodes, edges=edges, config=config)
@@ -99,11 +84,8 @@ def render_agraph_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: s
 
 
 def fqn_from_table(t: exp.Table) -> str:
-    """Return fully qualified name parts present in a sqlglot Table.
-    Handles backticks and missing parts gracefully.
-    """
     parts = []
-    for p in (t.catalog, t.db, t.name):  # project, dataset, table
+    for p in (t.catalog, t.db, t.name):  
         if p:
             s = str(p).replace("`", "")
             if s:
@@ -112,7 +94,6 @@ def fqn_from_table(t: exp.Table) -> str:
 
 
 def complete_fqn(name: str, default_project: Optional[str], default_dataset: Optional[str]) -> str:
-    """Complete partial names using optional defaults (project, dataset)."""
     if not name:
         return name
     dot = name.count(".")
@@ -124,7 +105,6 @@ def complete_fqn(name: str, default_project: Optional[str], default_dataset: Opt
 
 
 def collect_cte_aliases(stmt: exp.Expression) -> Set[str]:
-    """Collect CTE aliases to avoid treating them as real tables."""
     names = set()
     for cte in stmt.find_all(exp.CTE):
         alias = (cte.alias or (cte.this and cte.this.name))
@@ -162,7 +142,6 @@ def extract_create_targets(sql_text: str, default_project: Optional[str], defaul
             if t is create.this:
                 continue
             name = fqn_from_table(t)
-            # Skip CTE-only references
             if (t.name and str(t.name).lower() in cte_aliases) and not t.db and not t.catalog:
                 continue
             name = complete_fqn(name, default_project, default_dataset)
@@ -199,8 +178,8 @@ def build_graph(pairs: List[Tuple[str, Set[str], str]]) -> nx.DiGraph:
 
 def focus_band(G: nx.DiGraph, focus: str) -> Tuple[set, set]:
     """Return (sources feeding focus, dependents reading from focus)."""
-    sources = set(G.successors(focus))      # focus -> sources
-    dependents = set(G.predecessors(focus)) # dependents -> focus
+    sources = set(G.successors(focus))     
+    dependents = set(G.predecessors(focus)) 
     return sources, dependents
 
 
@@ -218,8 +197,6 @@ def _legend_html() -> str:
 def render_pyvis_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: set, height_px: int = 760) -> str:
     """Render LR band using PyVis and return the HTML for embedding/download."""
     net = Network(height=f"{height_px}px", width="100%", directed=True, notebook=False)
-
-    # Sources (left)
     for n in sorted(sources):
         data = G.nodes[n]
         kind = data.get("kind")
@@ -227,12 +204,10 @@ def render_pyvis_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: se
         color = "#B9F6CA" if kind == "table" else ("#A3D3FF" if kind == "view" else "#E8EAF6")
         net.add_node(n, label=n, shape=shape, color=color, level=0)
 
-    # Focus (middle)
     fkind = G.nodes[focus].get("kind", "table")
     fshape = "box" if fkind in ("table", "external") else "ellipse"
     net.add_node(focus, label=focus, shape=fshape, color="#FFD59E", level=1)
 
-    # Dependents (right)
     for n in sorted(dependents):
         data = G.nodes[n]
         kind = data.get("kind")
@@ -240,13 +215,12 @@ def render_pyvis_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: se
         color = "#B9F6CA" if kind == "table" else ("#A3D3FF" if kind == "view" else "#E8EAF6")
         net.add_node(n, label=n, shape=shape, color=color, level=2)
 
-    # Edges: Left→Focus and Focus→Right
-    for s in sources:
-        net.add_edge(s, focus, arrows="to", label="feeds")       # source -> focus
-    for d in dependents:
-        net.add_edge(focus, d, arrows="to", label="feeds")       # focus -> dependent
 
-    # Hierarchical layout LR (JSON string)
+    for s in sources:
+        net.add_edge(s, focus, arrows="to", label="feeds")      
+    for d in dependents:
+        net.add_edge(focus, d, arrows="to", label="feeds")    
+
     net.set_options(
         """
         {
@@ -273,7 +247,6 @@ def render_pyvis_lr_band(G: nx.DiGraph, focus: str, sources: set, dependents: se
 
 st.set_page_config(page_title="BigQuery Reference Viewer", layout="wide")
 
-# ---- Custom CSS (soft cards & tighter spacing) ----
 st.markdown(
     """
     <style>
@@ -288,8 +261,7 @@ st.markdown(
 
 st.title("BigQuery Reference Viewer")
 st.caption("Visualize how your CREATE TABLE/VIEW statements read from and feed other objects.")
-
-# Sidebar — global controls
+s
 with st.sidebar:
     st.header("Options")
     default_project = "" #st.text_input("Default Project (optional)")
@@ -323,7 +295,6 @@ with st.sidebar:
             language="sql",
         )
 
-# Input area
 left, mid, right = st.columns([1, 1, 2])
 
 with left:
@@ -346,7 +317,6 @@ if raw_sql and raw_sql.strip():
 
         with mid:
             st.subheader("Focus Selection")
-            # Searchable select (Streamlit selectbox has built-in typeahead)
             default_index = targets.index(st.session_state["focus_node"]) if st.session_state.get(
                 "focus_node") in targets else 0
             selected = st.selectbox("Target (only CREATE targets):", options=targets, index=default_index)
@@ -358,7 +328,7 @@ if raw_sql and raw_sql.strip():
         focus = st.session_state["focus_node"]
         sources, dependents = focus_band(G, focus)
 
-        # Metrics row
+    
         m1, m2, m3 = st.columns(3)
         with m1:
             st.markdown(f"<div class='metric-badge'><b>Targets</b><br>{len(targets)}</div>", unsafe_allow_html=True)
@@ -367,7 +337,7 @@ if raw_sql and raw_sql.strip():
         with m3:
             st.markdown(f"<div class='metric-badge'><b>Dependents (→)</b><br>{len(dependents)}</div>", unsafe_allow_html=True)
 
-        # Left & Right detail lists
+
         if show_tables:
             with left:
                 st.subheader("Feeds Me (Left)")
@@ -410,7 +380,6 @@ if raw_sql and raw_sql.strip():
         st.subheader(f"View: Sources → **{focus}** → Dependents")
         st.markdown(_legend_html(), unsafe_allow_html=True)
 
-        # Choose renderer: Interactive (agraph) or Pretty export (pyvis)
         renderer = st.radio(
             "Renderer",
             options=["Interactive (click to focus)", "Pretty (exportable HTML)"],
@@ -422,12 +391,12 @@ if raw_sql and raw_sql.strip():
         if renderer.startswith("Interactive"):
             clicked = render_agraph_lr_band(G, focus, sources, dependents, height_px=graph_height)
             if clicked and clicked in G.nodes:
-                # Only switch focus if the click is meaningful:
+
                 if clicked != st.session_state["focus_node"]:
                     st.session_state["focus_node"] = clicked
                     st.rerun()
         else:
-            # Your existing PyVis render + download
+
             html = render_pyvis_lr_band(G, focus, sources, dependents, height_px=graph_height)
             st.components.v1.html(html, height=graph_height + 40, scrolling=True)
             with st.expander("Download graph as standalone HTML"):
