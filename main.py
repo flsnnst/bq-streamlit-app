@@ -380,13 +380,13 @@ if raw_sql and raw_sql.strip():
         st.subheader(f"View: Sources → **{focus}** → Dependents")
         st.markdown(_legend_html(), unsafe_allow_html=True)
        
-        renderer = st.radio(
-            "Renderer",
-            options=["Interactive (click to focus)", "Pretty (exportable HTML)"],
-            index=0,
-            horizontal=True,
-            help="Interactive lets you click nodes to change focus; Pretty gives a polished PyVis export."
-        )
+        # renderer = st.radio(
+        #     "Renderer",
+        #     options=["Interactive (click to focus)", "Pretty (exportable HTML)"],
+        #     index=0,
+        #     horizontal=True,
+        #     help="Interactive lets you click nodes to change focus; Pretty gives a polished PyVis export."
+        # )
 
         if renderer.startswith("Interactive"):
             clicked = render_agraph_lr_band(G, focus, sources, dependents, height_px=graph_height)
