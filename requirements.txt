@@ -1,0 +1,5 @@
+networkx==3.2.1
+pyvis==0.3.2
+sqlglot==27.10.0
+streamlit==1.44.1
+streamlit_agraph==0.0.45
