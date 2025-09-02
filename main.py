@@ -390,7 +390,7 @@ if raw_sql and raw_sql.strip():
     </style>
     """,
     unsafe_allow_html=True
-)
+        )
         renderer = st.radio(
             "Renderer",
             options=["Interactive (click to focus)", "Pretty (exportable HTML)"],
